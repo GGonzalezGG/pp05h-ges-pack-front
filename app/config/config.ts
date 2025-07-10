@@ -1,52 +1,65 @@
-// app/config/config.ts
-// Configuración que funciona tanto en Deno como en Next.js
-
-// Función para obtener variables de entorno de manera compatible
-const getEnvVar = (key: string): string | undefined => {
-  // En Deno (servidor backend)
-  if (typeof Deno !== 'undefined') {
-    return Deno.env.get(key);
-  }
-  
-  // En Next.js (cliente/servidor frontend)
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env[key] || process.env[`NEXT_PUBLIC_${key}`];
-  }
-  
-  return undefined;
-};
+// config/config.ts
+// config especifica frontend
 
 export const config = {
-  // URLs de servicios - obtenidas de variables de entorno
+  // URLs de servicios - usar directamente las variables de entorno
   backend: {
-    url: getEnvVar("BACKEND_URL") || "http://localhost:8000"
+    url: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
   },
   
   frontend: {
-    url: getEnvVar("FRONTEND_URL") || "http://localhost:3000"
+    url: process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000"
   },
   
-  // Configuración de WhatsApp (solo para servidor Deno)
-  whatsappApiUrl: "https://graph.facebook.com/v22.0/660499770460535", // Reemplazar con tu Phone Number ID
-  whatsappToken: getEnvVar("WHATSAPP_API_TOKEN"),
-  
-  // Configuración de puertos
+  // Configuración de puertos por defecto
   ports: {
     backend: 8000,
     frontend: 3000
+  },
+  
+  // Configuración adicional si la necesitas
+  api: {
+    timeout: 30000, // 30 segundos
+    retries: 3
   }
 };
 
 // Función helper para obtener la URL del backend
-export const getBackendUrl = () => {
-  return config.backend.url;
+export const getBackendUrl = (): string => {
+  const backendUrl = config.backend.url;
+  
+  // Log para debugging (solo en desarrollo)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 Variables de entorno disponibles:');
+    console.log('🔍 NEXT_PUBLIC_BACKEND_URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
+    console.log('🔍 Backend URL final:', backendUrl);
+    console.log('🔍 Tipo de entorno:', typeof window === 'undefined' ? 'servidor' : 'cliente');
+  }
+  
+  return backendUrl;
+};
+
+// Función helper para obtener la URL del frontend
+export const getFrontendUrl = (): string => {
+  return config.frontend.url;
 };
 
 // Función helper para construir URLs de API
-export const buildApiUrl = (endpoint: string) => {
+export const buildApiUrl = (endpoint: string): string => {
   const baseUrl = getBackendUrl();
-  return `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-};
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const fullUrl = `${baseUrl}${cleanEndpoint}`;
+  
+  // Log para debugging (solo en desarrollo)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔗 Building API URL:');
+    console.log('   Base URL:', baseUrl);
+    console.log('   Endpoint:', cleanEndpoint);
+    console.log('   Full URL:', fullUrl);
+  }
+  
+  return fullUrl;
+}
 
-// Exportar para usar en los componentes
+// Exportar configuración por defecto
 export default config;
