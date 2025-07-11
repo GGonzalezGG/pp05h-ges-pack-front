@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Package, Clock, AlertTriangle, CheckCircle, XCircle, Grid, List } from 'lucide-react';
 import PackageDisplay, { PackageData } from './PackageDisplay';
 import StatusSelector from './StatusSelector';
@@ -32,6 +31,54 @@ interface DashboardItem {
   fechaEntregaPaquete?: string;
 }
 
+// Tipo para la respuesta de la API
+interface ApiResponse {
+  success: boolean;
+  data?: DashboardItem[];
+  error?: string;
+}
+
+// Tipo para los datos sin procesar de la API
+interface RawApiItem {
+  id: number;
+  idDestinatario?: number;
+  iddestinatario?: number;
+  idRetirador?: number;
+  idretirador?: number;
+  fechaEntrega?: string;
+  fechaentrega?: string;
+  fechaLimite?: string;
+  fechalimite?: string;
+  fechaRetiro?: string;
+  fecharetiro?: string;
+  ubicacion?: string;
+  nombreDestinatario?: string;
+  nombredestinatario?: string;
+  apellidoDestinatario?: string;
+  apellidodestinatario?: string;
+  departamento?: string;
+  nombreRetirador?: string;
+  nombreretirador?: string;
+  apellidoRetirador?: string;
+  apellidoretirador?: string;
+  idUsuario?: number;
+  idusuario?: number;
+  idPack?: number;
+  idpack?: number;
+  nombreResidente?: string;
+  nombreresidente?: string;
+  apellidoResidente?: string;
+  apellidoresidente?: string;
+  estado?: string;
+  descripcion?: string;
+  fechaCreacion?: string;
+  fechacreacion?: string;
+  ubicacionPaquete?: string;
+  ubicacionpaquete?: string;
+  fechaEntregaPaquete?: string;
+  fechaentregapaquete?: string;
+}
+
 interface DashboardConfig {
   title: string;
   endpoint: string;
@@ -58,7 +105,6 @@ interface DashboardProps {
   onStatusChange?: (itemId: number, newStatus: string) => Promise<void>;
 }
 
-
 const Dashboard: React.FC<DashboardProps> = ({ 
   config, 
   refreshInterval = 30000, // 30 segundos por defecto
@@ -74,8 +120,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [currentViewMode, setCurrentViewMode] = useState<'table' | 'cards'>(viewMode);
 
-  // Función para obtener datos del servidor
-  const fetchData = async () => {
+  // Función para obtener datos del servidor - ahora con useCallback para evitar el warning
+  const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('authToken');
       
@@ -95,11 +141,11 @@ const Dashboard: React.FC<DashboardProps> = ({
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data: ApiResponse = await response.json();
       
       if (data.success) {
         // Procesar los datos para normalizar las propiedades
-        const processedData = (data.data || []).map((item: any) => {
+        const processedData = (data.data || []).map((item: RawApiItem) => {
           // Normalizar propiedades que pueden venir en diferentes casos
           const normalizedItem: DashboardItem = {
             id: item.id,
@@ -142,7 +188,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [config.endpoint]); // Dependencia añadida para useCallback
 
   // Efecto para cargar datos inicial y configurar refresh automático
   useEffect(() => {
@@ -152,7 +198,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       const interval = setInterval(fetchData, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [config.endpoint, refreshInterval]);
+  }, [fetchData, refreshInterval]); // fetchData añadido como dependencia
 
   // Función para formatear fecha
   const formatDate = (dateString: string | null | undefined) => {
@@ -219,47 +265,47 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   // Agregar función para cambiar estado de reclamos
-const handleStatusChange = async (itemId: number, newStatus: string) => {
-  if (onStatusChange) {
-    await onStatusChange(itemId, newStatus);
-    // Refrescar datos después del cambio
-    await fetchData();
-  } else {
-    // Implementación por defecto si no se pasa la función
-    try {
-      const token = localStorage.getItem('authToken');
-      
-      if (!token) {
-        throw new Error('No hay token de autenticación');
-      }
+  const handleStatusChange = async (itemId: number, newStatus: string) => {
+    if (onStatusChange) {
+      await onStatusChange(itemId, newStatus);
+      // Refrescar datos después del cambio
+      await fetchData();
+    } else {
+      // Implementación por defecto si no se pasa la función
+      try {
+        const token = localStorage.getItem('authToken');
+        
+        if (!token) {
+          throw new Error('No hay token de autenticación');
+        }
 
-      const response = await fetch(buildApiUrl(`/api/reclamos/${itemId}`), {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
+        const response = await fetch(buildApiUrl(`/api/reclamos/${itemId}`), {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
 
-      const data = await response.json();
-      
-      if (data.success) {
-        // Refrescar datos después del cambio exitoso
-        await fetchData();
-      } else {
-        throw new Error(data.error || 'Error al actualizar estado');
+        const data: ApiResponse = await response.json();
+        
+        if (data.success) {
+          // Refrescar datos después del cambio exitoso
+          await fetchData();
+        } else {
+          throw new Error(data.error || 'Error al actualizar estado');
+        }
+      } catch (error) {
+        console.error('Error al cambiar estado:', error);
+        // Aquí podrías mostrar una notificación de error al usuario
       }
-    } catch (error) {
-      console.error('Error al cambiar estado:', error);
-      // Aquí podrías mostrar una notificación de error al usuario
     }
-  }
-};
+  };
 
   // Función para manejar reclamos
   const handleComplaintPackage = (packageId: number) => {
@@ -267,6 +313,7 @@ const handleStatusChange = async (itemId: number, newStatus: string) => {
       onComplaintPackage(packageId);
     }
   };
+
   // Calcular estadísticas
   const stats = React.useMemo(() => {
     const total = items.length;

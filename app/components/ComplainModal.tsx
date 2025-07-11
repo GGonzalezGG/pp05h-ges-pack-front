@@ -2,10 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 
+// Definir tipos específicos para packageData
+interface PackageData {
+  paquete: {
+    ID_pack: number;
+    ubicacion: string;
+    fecha_entrega: string;
+    fecha_retiro?: string;
+  };
+}
+
 interface ComplaintModalProps {
   isOpen: boolean;
   onClose: () => void;
-  packageData: any;
+  packageData: PackageData;
   onSubmit: (complaintData: { packageId: number; description: string }) => Promise<void>;
 }
 

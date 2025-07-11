@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { PackageData } from '../components/PackageDisplay';
 import { useRouter } from "next/navigation";
 import { showLoadingToast, hideLoadingToast } from '../components/toastLoading';
@@ -125,10 +126,13 @@ const QRModal = ({ isOpen, onClose, qrData, packageData }) => {
               </div>
             ) : qrImageUrl ? (
               <div className="flex flex-col items-center">
-                <img 
+                <Image 
                   src={qrImageUrl} 
                   alt="Código QR" 
+                  width={200}
+                  height={200}
                   className="mb-2 border-2 border-gray-300 rounded"
+                  priority
                 />
                 <p className="text-xs text-gray-500 mb-3">
                   Código QR único para retiro

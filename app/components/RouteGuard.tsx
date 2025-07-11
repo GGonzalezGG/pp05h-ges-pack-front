@@ -1,7 +1,7 @@
 // app/components/RouteGuard.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface RouteGuardProps {
@@ -14,12 +14,7 @@ export default function RouteGuard({ children, adminOnly = false }: RouteGuardPr
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    // Verificar autenticación cuando el componente se monta
-    checkAuth();
-  }, []);
-
-  const checkAuth = () => {
+  const checkAuth = useCallback(() => {
     console.log("Verificando autenticación...");
     // Verificar token
     const token = localStorage.getItem("authToken");
@@ -70,7 +65,12 @@ export default function RouteGuard({ children, adminOnly = false }: RouteGuardPr
     console.log("Autorización exitosa");
     setAuthorized(true);
     setLoading(false);
-  };
+  }, [adminOnly, router]);
+
+  useEffect(() => {
+    // Verificar autenticación cuando el componente se monta
+    checkAuth();
+  }, [checkAuth]);
 
   // Mientras está verificando, mostrar pantalla de carga
   if (loading) {

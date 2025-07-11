@@ -26,21 +26,6 @@ interface Usuario {
   admin: boolean;
 }
 
-interface Paquete {
-  id: number;
-  idDestinatario: number;
-  idRetirador: number | null;
-  fechaEntrega: string;
-  fechaLimite: string | null;
-  fechaRetiro: string | null;
-  ubicacion: string;
-  nombreDestinatario: string;
-  apellidoDestinatario: string;
-  departamento: string;
-  nombreRetirador: string | null;
-  apellidoRetirador: string | null;
-}
-
 interface UserData {
   nombre: string;
   apellido: string;

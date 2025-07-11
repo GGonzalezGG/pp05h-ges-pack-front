@@ -1,9 +1,35 @@
-// app/lib/dashboardConfigs
+// app/lib/dashboardConfigs.tsx
 import React from 'react';
 import { Clock, CheckCircle, AlertTriangle, Package, FileText } from 'lucide-react';
 
+// Definir tipos para los datos
+interface Paquete {
+  id: number;
+  nombreDestinatario: string;
+  apellidoDestinatario: string;
+  departamento: string;
+  ubicacion?: string;
+  fechaEntrega: string | null;
+  fechaLimite: string | null;
+  fechaRetiro?: string | null;
+  nombreRetirador?: string;
+  apellidoRetirador?: string;
+}
+
+interface Reclamo {
+  id: number;
+  descripcion?: string;
+  nombreResidente: string;
+  apellidoResidente: string;
+  departamento: string;
+  idPack?: number;
+  estado?: string;
+}
+
+type ItemType = Paquete | Reclamo;
+
 // Función para formatear fecha
-const formatDate = (dateString: string | null | undefined) => {
+const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return 'N/A';
   try {
     return new Date(dateString).toLocaleDateString('es-CL', {
@@ -17,7 +43,7 @@ const formatDate = (dateString: string | null | undefined) => {
 };
 
 // Función para verificar si un paquete está vencido
-const isExpired = (fechaLimite: string | null | undefined) => {
+const isExpired = (fechaLimite: string | null | undefined): boolean => {
   if (!fechaLimite) return false;
   return new Date(fechaLimite) < new Date();
 };
@@ -31,12 +57,12 @@ export const paquetesConfig = {
     {
       key: 'id',
       label: 'ID',
-      render: (item: any) => `#${item.id}`
+      render: (item: Paquete) => `#${item.id}`
     },
     {
       key: 'destinatario',
       label: 'Destinatario',
-      render: (item: any) => (
+      render: (item: Paquete) => (
         <div>
           <div className="font-medium">
             {item.nombreDestinatario} {item.apellidoDestinatario}
@@ -48,7 +74,7 @@ export const paquetesConfig = {
     {
       key: 'ubicacion',
       label: 'Ubicación',
-      render: (item: any) => (
+      render: (item: Paquete) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
           {item.ubicacion || 'N/A'}
         </span>
@@ -57,12 +83,12 @@ export const paquetesConfig = {
     {
       key: 'fechaEntrega',
       label: 'Fecha Entrega',
-      render: (item: any) => formatDate(item.fechaEntrega)
+      render: (item: Paquete) => formatDate(item.fechaEntrega)
     },
     {
       key: 'fechaLimite',
       label: 'Fecha Límite',
-      render: (item: any) => (
+      render: (item: Paquete) => (
         <span className={`${isExpired(item.fechaLimite) ? 'text-red-600 font-medium' : ''}`}>
           {formatDate(item.fechaLimite)}
         </span>
@@ -71,14 +97,14 @@ export const paquetesConfig = {
     {
       key: 'retirador',
       label: 'Retirador',
-      render: (item: any) => 
+      render: (item: Paquete) => 
         item.nombreRetirador 
           ? `${item.nombreRetirador} ${item.apellidoRetirador}`
           : 'No retirado'
     }
   ],
   statusConfig: {
-    getStatus: (item: any) => {
+    getStatus: (item: Paquete) => {
       if (item.fechaRetiro) return 'delivered';
       if (isExpired(item.fechaLimite)) return 'expired';
       return 'pending';
@@ -115,12 +141,12 @@ export const reclamosConfig = {
     {
       key: 'id',
       label: 'ID',
-      render: (item: any) => `#${item.id}`
+      render: (item: Reclamo) => `#${item.id}`
     },
     {
       key: 'descripcion',
       label: 'Descripción',
-      render: (item: any) => (
+      render: (item: Reclamo) => (
         <div className="max-w-xs truncate" title={item.descripcion}>
           {item.descripcion || 'Sin descripción'}
         </div>
@@ -129,7 +155,7 @@ export const reclamosConfig = {
     {
       key: 'residente',
       label: 'Residente',
-      render: (item: any) => (
+      render: (item: Reclamo) => (
         <div>
           <div className="font-medium">
             {item.nombreResidente} {item.apellidoResidente}
@@ -141,17 +167,17 @@ export const reclamosConfig = {
     {
       key: 'paquete',
       label: 'Paquete',
-      render: (item: any) => 
+      render: (item: Reclamo) => 
         item.idPack ? `Paquete #${item.idPack}` : 'Sin paquete asociado'
     },
     {
       key: 'acciones',
       label: 'Acciones',
-      render: (item: any) => 'acciones' // Se manejará en el componente
+      render: (_item: Reclamo) => 'acciones' // Se manejará en el componente
     }
   ],
   statusConfig: {
-    getStatus: (item: any) => {
+    getStatus: (item: Reclamo) => {
       switch (item.estado?.toLowerCase()) {
         case 'completado': 
           return 'delivered';
