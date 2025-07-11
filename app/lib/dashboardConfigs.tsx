@@ -26,8 +26,6 @@ interface Reclamo {
   estado?: string;
 }
 
-type ItemType = Paquete | Reclamo;
-
 // Función para formatear fecha
 const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return 'N/A';
@@ -173,7 +171,7 @@ export const reclamosConfig = {
     {
       key: 'acciones',
       label: 'Acciones',
-      render: (_item: Reclamo) => 'acciones' // Se manejará en el componente
+      render: (item: Reclamo) => 'acciones' // Se manejará en el componente
     }
   ],
   statusConfig: {
