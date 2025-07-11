@@ -5,32 +5,8 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { showLoadingToast, hideLoadingToast } from './toastLoading';
 import { buildApiUrl } from '../config/config';
 
-// Añadir estos tipos arriba del componente ScanResultModal
-type ScanResultSuccess = {
-  ID_pack: string;
-  destinatario: string;
-  departamento: string;
-  ubicacion: string;
-  fechaEntrega: string;
-  userRetirador: string;
-};
-
-type ScanResultType = ScanResultSuccess | string;
-
-interface ScanResultModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  scanResult: ScanResultType | null;
-  isSuccess: boolean;
-}
-
 // Componente Modal para mostrar resultado del escaneo
-const ScanResultModal = ({
-  isOpen,
-  onClose,
-  scanResult,
-  isSuccess
-}: ScanResultModalProps) => {
+const ScanResultModal = ({ isOpen, onClose, scanResult, isSuccess }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
