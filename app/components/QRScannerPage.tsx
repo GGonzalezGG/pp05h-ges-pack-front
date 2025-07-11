@@ -5,10 +5,55 @@ import { Html5Qrcode } from 'html5-qrcode';
 import { showLoadingToast, hideLoadingToast } from './toastLoading';
 import { buildApiUrl } from '../config/config';
 
+// Interfaces para tipos
+interface PackageInfo {
+  ID_pack: string;
+  destinatario: string;
+  departamento: string;
+  ubicacion: string;
+  fechaEntrega: string;
+  userRetirador: string;
+}
+
+interface ScanHistoryItem {
+  id: number;
+  timestamp: Date;
+  success: boolean;
+  packageInfo?: PackageInfo;
+}
+
+interface ScanResultModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  scanResult: PackageInfo | string | null;
+  isSuccess: boolean;
+}
+
+interface ResultModalState {
+  isOpen: boolean;
+  result: PackageInfo | string | null;
+  isSuccess: boolean;
+}
+
+interface Camera {
+  id: string;
+  label: string;
+}
+
+interface ScannerState {
+  isScanning: boolean;
+  scanner: Html5Qrcode | null;
+}
+
 // Componente Modal para mostrar resultado del escaneo
-const ScanResultModal = ({ isOpen, onClose, scanResult, isSuccess }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+const ScanResultModal: React.FC<ScanResultModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  scanResult, 
+  isSuccess 
+}) => {
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -26,7 +71,7 @@ const ScanResultModal = ({ isOpen, onClose, scanResult, isSuccess }) => {
     }
   }, [isOpen]);
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setIsAnimating(false);
     setTimeout(() => {
       onClose();
@@ -50,7 +95,7 @@ const ScanResultModal = ({ isOpen, onClose, scanResult, isSuccess }) => {
             ? 'scale-100 opacity-100 translate-y-0' 
             : 'scale-95 opacity-0 translate-y-4'
         }`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
           <h3 className={`text-lg font-semibold transition-colors duration-200 ${
@@ -100,39 +145,42 @@ const ScanResultModal = ({ isOpen, onClose, scanResult, isSuccess }) => {
                   isAnimating ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
                 }`}>
                   <span className="font-medium text-gray-600">Paquete #:</span>
-                  <p className="text-gray-900">{scanResult?.ID_pack}</p>
+                  <p className="text-gray-900">{(scanResult as PackageInfo)?.ID_pack}</p>
                 </div>
                 <div className={`transition-all duration-500 delay-400 ${
                   isAnimating ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
                 }`}>
                   <span className="font-medium text-gray-600">Destinatario:</span>
-                  <p className="text-gray-900">{scanResult?.destinatario}</p>
+                  <p className="text-gray-900">{(scanResult as PackageInfo)?.destinatario}</p>
                 </div>
                 <div className={`transition-all duration-500 delay-500 ${
                   isAnimating ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
                 }`}>
                   <span className="font-medium text-gray-600">Departamento:</span>
-                  <p className="text-gray-900">{scanResult?.departamento}</p>
+                  <p className="text-gray-900">{(scanResult as PackageInfo)?.departamento}</p>
                 </div>
                 <div className={`transition-all duration-500 delay-600 ${
                   isAnimating ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
                 }`}>
                   <span className="font-medium text-gray-600">Ubicación:</span>
-                  <p className="text-gray-900">{scanResult?.ubicacion}</p>
+                  <p className="text-gray-900">{(scanResult as PackageInfo)?.ubicacion}</p>
                 </div>
                 <div className={`transition-all duration-500 delay-700 ${
                   isAnimating ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
                 }`}>
                   <span className="font-medium text-gray-600">Fecha Entrega:</span>
                   <p className="text-gray-900">
-                    {scanResult?.fechaEntrega ? new Date(scanResult.fechaEntrega).toLocaleString() : 'N/A'}
+                    {(scanResult as PackageInfo)?.fechaEntrega ? 
+                      new Date((scanResult as PackageInfo).fechaEntrega).toLocaleString() : 
+                      'N/A'
+                    }
                   </p>
                 </div>
                 <div className={`transition-all duration-500 delay-800 ${
                   isAnimating ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
                 }`}>
                   <span className="font-medium text-gray-600">Retirado por:</span>
-                  <p className="text-gray-900">{scanResult?.userRetirador}</p>
+                  <p className="text-gray-900">{(scanResult as PackageInfo)?.userRetirador}</p>
                 </div>
               </div>
             </div>
@@ -153,7 +201,7 @@ const ScanResultModal = ({ isOpen, onClose, scanResult, isSuccess }) => {
               </div>
               <div className="ml-3">
                 <h4 className="text-sm font-medium text-red-800">Error al procesar el código QR</h4>
-                <p className="text-sm text-red-700 mt-1">{scanResult}</p>
+                <p className="text-sm text-red-700 mt-1">{scanResult as string}</p>
               </div>
             </div>
           </div>
@@ -179,29 +227,29 @@ const ScanResultModal = ({ isOpen, onClose, scanResult, isSuccess }) => {
 };
 
 // Componente principal para escáner QR
-const QRScannerPage = () => {
-  const [qrCode, setQrCode] = useState('');
-  const [scanning, setScanning] = useState(false);
-  const [cameraScanning, setCameraScanning] = useState(false);
-  const [scanHistory, setScanHistory] = useState([]);
-  const [resultModal, setResultModal] = useState({ 
+const QRScannerPage: React.FC = () => {
+  const [qrCode, setQrCode] = useState<string>('');
+  const [scanning, setScanning] = useState<boolean>(false);
+  const [cameraScanning, setCameraScanning] = useState<boolean>(false);
+  const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
+  const [resultModal, setResultModal] = useState<ResultModalState>({ 
     isOpen: false, 
     result: null, 
     isSuccess: false 
   });
-  const [cameras, setCameras] = useState([]);
-  const [selectedCamera, setSelectedCamera] = useState('');
-  const [scannerError, setScannerError] = useState('');
+  const [cameras, setCameras] = useState<Camera[]>([]);
+  const [selectedCamera, setSelectedCamera] = useState<string>('');
+  const [scannerError, setScannerError] = useState<string>('');
   
   // Refs para manejar el scanner
-  const html5QrcodeRef = useRef(null);
-  const scannerStateRef = useRef({
+  const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
+  const scannerStateRef = useRef<ScannerState>({
     isScanning: false,
     scanner: null
   });
   
   // Ref para acceder al estado actual de cameraScanning
-  const cameraScanningRef = useRef(cameraScanning);
+  const cameraScanningRef = useRef<boolean>(cameraScanning);
   
   // Actualizar la ref cuando cambie el estado
   useEffect(() => {
@@ -210,9 +258,9 @@ const QRScannerPage = () => {
 
   // Obtener cámaras disponibles
   useEffect(() => {
-    const getCameras = async () => {
+    const getCameras = async (): Promise<void> => {
       try {
-        const devices = await Html5Qrcode.getCameras();
+        const devices: Camera[] = await Html5Qrcode.getCameras();
         console.log('Cámaras disponibles:', devices);
         setCameras(devices);
         if (devices.length > 0) {
@@ -228,7 +276,7 @@ const QRScannerPage = () => {
   }, []);
 
   // Función para limpiar el scanner de forma segura
-  const cleanupScanner = useCallback(async () => {
+  const cleanupScanner = useCallback(async (): Promise<void> => {
     if (scannerStateRef.current.scanner && scannerStateRef.current.isScanning) {
       try {
         await scannerStateRef.current.scanner.stop();
@@ -244,7 +292,7 @@ const QRScannerPage = () => {
 
   // Efecto para limpiar el scanner al cambiar de cámara
   useEffect(() => {
-    const initCamera = async () => {
+    const initCamera = async (): Promise<void> => {
       if (selectedCamera && !cameraScanning) {
         await cleanupScanner();
       }
@@ -253,7 +301,7 @@ const QRScannerPage = () => {
   }, [selectedCamera, cameraScanning, cleanupScanner]);
 
   // Función para procesar escaneo manual
-  const handleManualScan = async () => {
+  const handleManualScan = async (): Promise<void> => {
     if (!qrCode.trim()) {
       alert('Por favor, ingresa un código QR válido');
       return;
@@ -263,7 +311,7 @@ const QRScannerPage = () => {
   };
 
   // Función para iniciar escaneo con cámara
-  const startCameraScan = async () => {
+  const startCameraScan = async (): Promise<void> => {
     if (!selectedCamera) return;
     
     await cleanupScanner();
@@ -282,11 +330,11 @@ const QRScannerPage = () => {
           aspectRatio: 1.0,
           disableFlip: false,
         },
-        async (decodedText) => {
+        async (decodedText: string) => {
           await stopCameraScan();
           await processScanCode(decodedText);
         },
-        (errorMessage) => {
+        (errorMessage?: string) => {
           if (errorMessage && !errorMessage.includes('No QR code found')) {
             console.warn('Error de escaneo:', errorMessage);
           }
@@ -303,7 +351,7 @@ const QRScannerPage = () => {
   };
 
   // Función para detener escaneo con cámara
-  const stopCameraScan = async () => {
+  const stopCameraScan = async (): Promise<void> => {
     try {
       console.log('Deteniendo scanner...');
       setCameraScanning(false);
@@ -330,12 +378,12 @@ const QRScannerPage = () => {
   };
 
   // Función para procesar el código QR
-  const processScanCode = async (code) => {
+  const processScanCode = async (code: string): Promise<void> => {
     showLoadingToast();
     setScanning(true);
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token: string | null = localStorage.getItem('authToken');
       if (!token) {
         throw new Error('No hay sesión activa');
       }
@@ -351,41 +399,42 @@ const QRScannerPage = () => {
         body: JSON.stringify({ codigoQR: code })
       });
 
-      const result = await response.json();
+      const result: { success: boolean; data?: PackageInfo; error?: string } = await response.json();
       console.log('Respuesta del servidor:', result);
       
       hideLoadingToast();
 
       if (result.success) {
         // Agregar al historial
-        const newScan = {
+        const newScan: ScanHistoryItem = {
           id: Date.now(),
           timestamp: new Date(),
           success: true,
           packageInfo: result.data
         };
-        setScanHistory(prev => [newScan, ...prev.slice(0, 9)]);
+        setScanHistory((prev: ScanHistoryItem[]) => [newScan, ...prev.slice(0, 9)]);
 
         // Mostrar modal de éxito
         setResultModal({
           isOpen: true,
-          result: result.data,
+          result: result.data || null,
           isSuccess: true
         });
       } else {
         // Mostrar modal de error
         setResultModal({
           isOpen: true,
-          result: result.error,
+          result: result.error || 'Error desconocido',
           isSuccess: false
         });
       }
     } catch (error) {
       hideLoadingToast();
       console.error('Error al procesar QR:', error);
+      const errorMessage: string = error instanceof Error ? error.message : 'Error de conexión';
       setResultModal({
         isOpen: true,
-        result: error.message || 'Error de conexión',
+        result: errorMessage,
         isSuccess: false
       });
     } finally {
@@ -404,7 +453,7 @@ const QRScannerPage = () => {
 
   // Cleanup cuando cambia la pestaña - SOLUCIÓN AL ERROR
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = (): void => {
       if (document.hidden && cameraScanningRef.current) {
         console.log('Página oculta, deteniendo scanner...');
         stopCameraScan();
@@ -457,7 +506,7 @@ const QRScannerPage = () => {
                   id="qr-input"
                   type="text"
                   value={qrCode}
-                  onChange={(e) => setQrCode(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQrCode(e.target.value)}
                   placeholder="Pega o escribe el código QR aquí"
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={scanning || cameraScanning}
@@ -487,11 +536,11 @@ const QRScannerPage = () => {
                   <select
                     id="camera-select"
                     value={selectedCamera}
-                    onChange={(e) => setSelectedCamera(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCamera(e.target.value)}
                     disabled={cameraScanning}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    {cameras.map((camera) => (
+                    {cameras.map((camera: Camera) => (
                       <option key={camera.id} value={camera.id}>
                         {camera.label || `Cámara ${camera.id}`}
                       </option>
@@ -572,7 +621,7 @@ const QRScannerPage = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {scanHistory.map((scan) => (
+                {scanHistory.map((scan: ScanHistoryItem) => (
                   <div key={scan.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center">
