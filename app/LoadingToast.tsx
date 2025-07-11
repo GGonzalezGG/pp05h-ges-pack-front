@@ -1,6 +1,5 @@
-/** @jsx h */
-import { h } from "preact";
-import { useEffect, useState } from "preact/hooks";
+// app/LoadingToast.tsx
+import { useEffect, useState } from "react";
 
 type Props = {
   isLoading: boolean;
@@ -29,7 +28,7 @@ export default function LoadingToast({ isLoading }: Props) {
       boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
       zIndex: 1000,
     }}>
-      <span class="spinner" style={{
+      <span className="spinner" style={{
         width: "16px",
         height: "16px",
         border: "2px solid #fff",
@@ -39,46 +38,12 @@ export default function LoadingToast({ isLoading }: Props) {
         animation: "spin 1s linear infinite"
       }}></span>
       <span>Cargando paquetes…</span>
-      <style>
-        {`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}
-      </style>
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
-
-
-
-
-/* Para poder usarlo en otro archivo:
-import { useState, useEffect } from "preact/hooks";
-import LoadingToast from "./LoadingToast.tsx";
-
-export default function PaquetesPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [paquetes, setPaquetes] = useState([]);
-
-  useEffect(() => {
-    fetch("/api/paquetes") // Reemplazar con la ruta del api
-      .then((res) => res.json())
-      .then((data) => {
-        setPaquetes(data);
-        setIsLoading(false);
-      });
-  }, []);
-
-  return (
-    <div>
-      <LoadingToast isLoading={isLoading} />
-      <h1>Paquetes Recibidos</h1>
-      {paquetes.map((p) => (
-        <div key={p.id}>{p.nombre}</div>
-      ))}
-    </div>
-  );
-}
-*/
