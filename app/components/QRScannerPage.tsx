@@ -331,7 +331,7 @@ const QRScannerPage = () => {
 
   // Función para procesar el código QR
   const processScanCode = async (code) => {
-    const toastId = showLoadingToast();
+    showLoadingToast();
     setScanning(true);
 
     try {
