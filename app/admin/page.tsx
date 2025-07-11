@@ -1,7 +1,7 @@
 // app/admin/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import RouteGuard from "../components/RouteGuard";
 import RegistroPaqueteForm from "../components/RegistroPaqueteForm";
@@ -41,16 +41,18 @@ interface Paquete {
   apellidoRetirador: string | null;
 }
 
+interface UserData {
+  nombre: string;
+  apellido: string;
+  // Agrega otros campos que esperas en userData
+}
+
 export default function AdminPage() {
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [users, setUsers] = useState<Usuario[]>([]);
-  const [paquetes, setPaquetes] = useState<Paquete[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [isLoadingPaquetes, setIsLoadingPaquetes] = useState(true);
   const [activeTab, setActiveTab] = useState("usuarios");
   const router = useRouter();
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
 
   // Función para manejar el retiro de paquetes
   const handleRetirePackage = async (packageId: number) => {
@@ -74,8 +76,6 @@ export default function AdminPage() {
       
       if (data.success) {
         alert('Paquete retirado exitosamente');
-        // Trigger refresh del dashboard
-        setRefreshTrigger(prev => prev + 1);
       } else {
         alert(data.error || 'Error al retirar el paquete');
       }
@@ -129,26 +129,7 @@ export default function AdminPage() {
     }
   };
 
-  useEffect(() => {
-    // Cargar datos del usuario desde localStorage
-    const userDataStr = localStorage.getItem("userData");
-    if (userDataStr) {
-      try {
-        const parsedUserData = JSON.parse(userDataStr);
-        setUserData(parsedUserData);
-      } catch (error) {
-        console.error("Error al procesar datos de usuario:", error);
-      }
-    }
-    
-    // Cargar usuarios
-    fetchUsers();
-    
-    // Cargar paquetes
-    fetchPaquetes();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     const toastId = showLoadingToast("Cargando usuarios...");
     
     try {
@@ -188,48 +169,23 @@ export default function AdminPage() {
       setIsLoadingUsers(false);
       hideLoadingToast(toastId);
     }
-  };
+  }, [router]);
 
-  const fetchPaquetes = async () => {
-    const toastId = showLoadingToast("Cargando paquetes...");
-    
-    try {
-      const token = localStorage.getItem("authToken");
-      
-      if (!token) {
-        console.error("No hay token disponible");
-        return;
+  useEffect(() => {
+    // Cargar datos del usuario desde localStorage
+    const userDataStr = localStorage.getItem("userData");
+    if (userDataStr) {
+      try {
+        const parsedUserData = JSON.parse(userDataStr);
+        setUserData(parsedUserData);
+      } catch (error) {
+        console.error("Error al procesar datos de usuario:", error);
       }
-      
-      console.log("Obteniendo paquetes...");
-
-      const response = await fetch(buildApiUrl("/api/paquetes"), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error HTTP: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log("Paquetes recibidos:", result);
-      
-      if (result.success && Array.isArray(result.data)) {
-        setPaquetes(result.data);
-      } else {
-        console.error("La respuesta no contiene un array de paquetes:", result);
-        setPaquetes([]);
-      }
-    } catch (error) {
-      console.error("Error al obtener paquetes:", error);
-      setPaquetes([]);
-    } finally {
-      setIsLoadingPaquetes(false);
-      hideLoadingToast(toastId);
     }
-  };
+    
+    // Cargar usuarios
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleLogout = () => {
     const toastId = showLoadingToast("Cerrando sesión...");
@@ -243,23 +199,10 @@ export default function AdminPage() {
     }, 500);
   };
 
-  // Función para formatear fechas
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "No definido";
-    
-    const date = new Date(dateString);
-    return date.toLocaleString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   // Función para refrescar la lista de paquetes después de registrar uno nuevo
   const refreshPaquetes = () => {
-    fetchPaquetes();
+    // Esta función se puede usar para refrescar paquetes si es necesario
+    console.log("Refreshing paquetes...");
   };
 
   const loadUsuarios = () => {
@@ -442,28 +385,28 @@ export default function AdminPage() {
         )}
 
         {/* Dashboard */}
-        {activeTab == "paquetes" && (
+        {activeTab === "paquetes" && (
           <div className="container mx-auto px-4 py-6">
-      <Dashboard 
-        config={paquetesConfig}
-        viewMode="table" // o "cards"
-        showPackageDetails={true} // Habilita vista de tarjetas
-        onRetirePackage={handleRetirePackage} // Callback para retiros
-        onComplaintPackage={handleComplaintPackage} // Callback para reclamos
-        refreshInterval={30000}
-      />
-    </div>
+            <Dashboard 
+              config={paquetesConfig}
+              viewMode="table" // o "cards"
+              showPackageDetails={true} // Habilita vista de tarjetas
+              onRetirePackage={handleRetirePackage} // Callback para retiros
+              onComplaintPackage={handleComplaintPackage} // Callback para reclamos
+              refreshInterval={30000}
+            />
+          </div>
         )}
         {/* Dashboard */}
-        {activeTab == "reclamos" && (
+        {activeTab === "reclamos" && (
           <div className="container mx-auto px-4 py-6">
-      <Dashboard
-        config={reclamosConfig}
-        refreshInterval={30000}
-        viewMode="table"
-        onStatusChange={handleStatusChange}
-      />
-    </div>
+            <Dashboard
+              config={reclamosConfig}
+              refreshInterval={30000}
+              viewMode="table"
+              onStatusChange={handleStatusChange}
+            />
+          </div>
         )}
 
         {/* Contenido de la pestaña de registro de paquetes */}

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { showLoadingToast, hideLoadingToast } from './toastLoading';
-import build from 'next/dist/build';
 import { buildApiUrl } from '../config/config';
 
 // Componente Modal para mostrar resultado del escaneo
