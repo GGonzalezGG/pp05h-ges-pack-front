@@ -152,7 +152,7 @@ export default function AdminPage() {
       setUsers([]); // En caso de error, asignar array vacío
     } finally {
       setIsLoadingUsers(false);
-      hideLoadingToast(toastId);
+      hideLoadingToast();
     }
   }, [router]);
 
@@ -179,7 +179,7 @@ export default function AdminPage() {
     localStorage.removeItem("userData");
     
     setTimeout(() => {
-      hideLoadingToast(toastId);
+      hideLoadingToast();
       router.push("/login");
     }, 500);
   };

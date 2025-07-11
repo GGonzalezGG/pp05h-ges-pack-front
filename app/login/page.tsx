@@ -64,7 +64,7 @@ export default function LoginPage() {
       setError(error instanceof Error ? error.message : "Error desconocido");
     } finally {
       // Ocultar toast de carga
-      hideLoadingToast(toastId);
+      hideLoadingToast();
     }
   };
 

@@ -116,7 +116,7 @@ export default function RegistroPaqueteForm() {
         texto: "Error de conexión al buscar usuarios"
       });
     } finally {
-      hideLoadingToast(toastId);
+      hideLoadingToast();
       setLoading(false);
     }
   };
@@ -151,7 +151,7 @@ export default function RegistroPaqueteForm() {
           tipo: "error",
           texto: "No hay sesión activa, por favor inicie sesión nuevamente"
         });
-        hideLoadingToast(toastId);
+        hideLoadingToast();
         return;
       }
 
@@ -199,7 +199,7 @@ export default function RegistroPaqueteForm() {
         texto: "Error de conexión al registrar el paquete"
       });
     } finally {
-      hideLoadingToast(toastId);
+      hideLoadingToast();
       setLoading(false);
     }
   };

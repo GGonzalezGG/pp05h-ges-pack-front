@@ -354,7 +354,7 @@ const QRScannerPage = () => {
       const result = await response.json();
       console.log('Respuesta del servidor:', result);
       
-      hideLoadingToast(toastId);
+      hideLoadingToast();
 
       if (result.success) {
         // Agregar al historial
@@ -381,7 +381,7 @@ const QRScannerPage = () => {
         });
       }
     } catch (error) {
-      hideLoadingToast(toastId);
+      hideLoadingToast();
       console.error('Error al procesar QR:', error);
       setResultModal({
         isOpen: true,

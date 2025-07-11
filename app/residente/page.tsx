@@ -286,7 +286,7 @@ const ResidentePage = () => {
       const result = await response.json();
 
       if (result.success) {
-        hideLoadingToast(toastId);
+        hideLoadingToast();
         
         // Encontrar los datos del paquete
         const packageInfo = packageData.find(pkg => pkg.paquete.ID_pack === packageId);
@@ -298,11 +298,11 @@ const ResidentePage = () => {
           packageData: packageInfo
         });
       } else {
-        hideLoadingToast(toastId);
+        hideLoadingToast();
         alert(`Error al generar código QR: ${result.error}`);
       }
     } catch (error) {
-      hideLoadingToast(toastId);
+      hideLoadingToast();
       console.error('Error al generar código QR:', error);
       alert('Error de conexión al generar código QR');
     }
@@ -340,14 +340,14 @@ const handleSubmitComplaint = async (complaintData: { packageId: number; descrip
     const result = await response.json();
 
     if (result.success) {
-      hideLoadingToast(toastId);
+      hideLoadingToast();
       alert('Reclamo enviado exitosamente. Te contactaremos pronto.');
     } else {
-      hideLoadingToast(toastId);
+      hideLoadingToast();
       throw new Error(result.error || 'Error al enviar el reclamo');
     }
   } catch (error) {
-    hideLoadingToast(toastId);
+    hideLoadingToast();
     console.error('Error al enviar reclamo:', error);
     throw error; // Re-lanzar el error para que el modal lo maneje
   }
@@ -421,7 +421,7 @@ const handleSubmitComplaint = async (complaintData: { packageId: number; descrip
     localStorage.removeItem("userData");
     
     setTimeout(() => {
-      hideLoadingToast(toastId);
+      hideLoadingToast();
       router.push("/login");
     }, 500);
   };
