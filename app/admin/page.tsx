@@ -115,7 +115,7 @@ export default function AdminPage() {
   };
 
   const fetchUsers = useCallback(async () => {
-    const toastId = showLoadingToast("Cargando usuarios...");
+    const toastId = showLoadingToast();
     
     try {
       const token = localStorage.getItem("authToken");
@@ -173,7 +173,7 @@ export default function AdminPage() {
   }, [fetchUsers]);
 
   const handleLogout = () => {
-    const toastId = showLoadingToast("Cerrando sesión...");
+    const toastId = showLoadingToast();
     
     localStorage.removeItem("authToken");
     localStorage.removeItem("userData");

@@ -66,7 +66,7 @@ export default function RegistroPaqueteForm() {
 
   const buscarUsuariosPorDepartamento = async (departamentoParam: string) => {
     setLoading(true);
-    const toastId = showLoadingToast("Buscando residentes...");
+    const toastId = showLoadingToast();
     
     try {
       const token = localStorage.getItem("authToken");
@@ -142,7 +142,7 @@ export default function RegistroPaqueteForm() {
     }
 
     setLoading(true);
-    const toastId = showLoadingToast("Registrando paquete...");
+    const toastId = showLoadingToast();
     
     try {
       const token = localStorage.getItem("authToken");

@@ -35,7 +35,7 @@ export default function LoginPage() {
     setError("");
     
     // Mostrar toast de carga
-    const toastId = showLoadingToast("Iniciando sesión...");
+    const toastId = showLoadingToast();
 
     try {
       const response = await fetch(buildApiUrl("/api/auth/login"), {

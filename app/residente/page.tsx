@@ -265,7 +265,7 @@ const ResidentePage = () => {
 
   // Función para generar código QR
   const handleRetirePackage = async (packageId: number) => {
-    const toastId = showLoadingToast("Generando código QR...");
+    const toastId = showLoadingToast();
     
     try {
       const token = localStorage.getItem('authToken');
@@ -317,7 +317,7 @@ const ResidentePage = () => {
 };
 
 const handleSubmitComplaint = async (complaintData: { packageId: number; description: string }) => {
-  const toastId = showLoadingToast("Enviando reclamo...");
+  const toastId = showLoadingToast();
   
   try {
     const token = localStorage.getItem('authToken');
@@ -415,7 +415,7 @@ const handleSubmitComplaint = async (complaintData: { packageId: number; descrip
   }
 
   const handleLogout = () => {
-    const toastId = showLoadingToast("Cerrando sesión...");
+    const toastId = showLoadingToast();
     
     localStorage.removeItem("authToken");
     localStorage.removeItem("userData");
