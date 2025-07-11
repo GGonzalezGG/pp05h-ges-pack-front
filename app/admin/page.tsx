@@ -184,12 +184,6 @@ export default function AdminPage() {
     }, 500);
   };
 
-  // Función para refrescar la lista de paquetes después de registrar uno nuevo
-  const refreshPaquetes = () => {
-    // Esta función se puede usar para refrescar paquetes si es necesario
-    console.log("Refreshing paquetes...");
-  };
-
   const loadUsuarios = () => {
     fetchUsers();
   };
@@ -398,7 +392,7 @@ export default function AdminPage() {
         {activeTab === "registrar" && (
           <div>
             <h2 className="text-2xl font-semibold mb-6 text-zinc-800">Registrar nuevo paquete</h2>
-            <RegistroPaqueteForm onSuccess={refreshPaquetes} />
+            <RegistroPaqueteForm/>
           </div>
         )}
         {/* Contenido de la pestaña de registro de usuarios */}
