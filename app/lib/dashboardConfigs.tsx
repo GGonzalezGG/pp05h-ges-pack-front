@@ -171,7 +171,7 @@ export const reclamosConfig = {
     {
       key: 'acciones',
       label: 'Acciones',
-      render: (item: Reclamo) => 'acciones' // Se manejará en el componente
+      render: () => 'acciones' // Se manejará en el componente
     }
   ],
   statusConfig: {
