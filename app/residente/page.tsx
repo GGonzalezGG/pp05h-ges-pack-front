@@ -19,12 +19,36 @@ const PackageDisplay = dynamic(
   }
 );
 
+// Interfaces de tipos
+interface QRData {
+  codigoQR: string;
+  fechaExpiracion: string;
+}
+
+interface QRModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  qrData: QRData | null;
+  packageData: PackageData | null;
+}
+
+interface QRModalState {
+  isOpen: boolean;
+  qrData: QRData | null;
+  packageData: PackageData | null;
+}
+
+interface ComplaintModalState {
+  isOpen: boolean;
+  packageData: PackageData | null;
+}
+
 // Componente Modal para mostrar QR
-const QRModal = ({ isOpen, onClose, qrData, packageData }) => {
+const QRModal: React.FC<QRModalProps> = ({ isOpen, onClose, qrData, packageData }) => {
   const [qrImageUrl, setQrImageUrl] = useState<string>('');
-  const [generating, setGenerating] = useState(false);
-  const [showQRText, setShowQRText] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [generating, setGenerating] = useState<boolean>(false);
+  const [showQRText, setShowQRText] = useState<boolean>(false);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   // Generar imagen QR cuando se abre el modal
   useEffect(() => {
@@ -68,7 +92,7 @@ const QRModal = ({ isOpen, onClose, qrData, packageData }) => {
   }, [isOpen]);
 
   // Función para copiar el código QR al portapapeles
-  const copyQRCode = async () => {
+  const copyQRCode = async (): Promise<void> => {
     if (qrData?.codigoQR) {
       try {
         await navigator.clipboard.writeText(qrData.codigoQR);
@@ -81,7 +105,7 @@ const QRModal = ({ isOpen, onClose, qrData, packageData }) => {
   };
 
   // Manejar el cierre con animación
-  const handleClose = () => {
+  const handleClose = (): void => {
     setIsAnimating(false);
     setTimeout(() => {
       onClose();
@@ -208,16 +232,16 @@ const QRModal = ({ isOpen, onClose, qrData, packageData }) => {
   );
 };
 
-const ResidentePage = () => {
+const ResidentePage: React.FC = () => {
   const [packageData, setPackageData] = useState<PackageData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [qrModal, setQrModal] = useState({ isOpen: false, qrData: null, packageData: null });
+  const [qrModal, setQrModal] = useState<QRModalState>({ isOpen: false, qrData: null, packageData: null });
   const router = useRouter();
-  const [complaintModal, setComplaintModal] = useState({ isOpen: false, packageData: null });
+  const [complaintModal, setComplaintModal] = useState<ComplaintModalState>({ isOpen: false, packageData: null });
 
   // Función para obtener paquetes desde la API
-  const fetchPackages = async () => {
+  const fetchPackages = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
@@ -264,7 +288,7 @@ const ResidentePage = () => {
   }, []);
 
   // Función para generar código QR
-  const handleRetirePackage = async (packageId: number) => {
+  const handleRetirePackage = async (packageId: number): Promise<void> => {
     showLoadingToast();
     
     try {
@@ -289,7 +313,7 @@ const ResidentePage = () => {
         hideLoadingToast();
         
         // Encontrar los datos del paquete
-        const packageInfo = packageData.find(pkg => pkg.paquete.ID_pack === packageId);
+        const packageInfo = packageData.find(pkg => pkg.paquete.ID_pack === packageId) || null;
         
         // Mostrar modal con QR
         setQrModal({
@@ -308,50 +332,50 @@ const ResidentePage = () => {
     }
   };
 
-  const handleComplaint = (packageId: number) => {
-  const packageInfo = packageData.find(pkg => pkg.paquete.ID_pack === packageId);
-  setComplaintModal({
-    isOpen: true,
-    packageData: packageInfo
-  });
-};
-
-const handleSubmitComplaint = async (complaintData: { packageId: number; description: string }) => {
-  showLoadingToast();
-  
-  try {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('No hay sesión activa');
-    }
-
-    const response = await fetch(buildApiUrl('/api/resident/complaint'), {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        packageId: complaintData.packageId,
-        description: complaintData.description
-      })
+  const handleComplaint = (packageId: number): void => {
+    const packageInfo = packageData.find(pkg => pkg.paquete.ID_pack === packageId) || null;
+    setComplaintModal({
+      isOpen: true,
+      packageData: packageInfo
     });
+  };
 
-    const result = await response.json();
+  const handleSubmitComplaint = async (complaintData: { packageId: number; description: string }): Promise<void> => {
+    showLoadingToast();
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No hay sesión activa');
+      }
 
-    if (result.success) {
+      const response = await fetch(buildApiUrl('/api/resident/complaint'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          packageId: complaintData.packageId,
+          description: complaintData.description
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        hideLoadingToast();
+        alert('Reclamo enviado exitosamente. Te contactaremos pronto.');
+      } else {
+        hideLoadingToast();
+        throw new Error(result.error || 'Error al enviar el reclamo');
+      }
+    } catch (error) {
       hideLoadingToast();
-      alert('Reclamo enviado exitosamente. Te contactaremos pronto.');
-    } else {
-      hideLoadingToast();
-      throw new Error(result.error || 'Error al enviar el reclamo');
+      console.error('Error al enviar reclamo:', error);
+      throw error; // Re-lanzar el error para que el modal lo maneje
     }
-  } catch (error) {
-    hideLoadingToast();
-    console.error('Error al enviar reclamo:', error);
-    throw error; // Re-lanzar el error para que el modal lo maneje
-  }
-};
+  };
 
   // Separar paquetes por estado
   const pendingPackages = packageData.filter(pkg => !pkg.paquete.fecha_retiro);
@@ -414,7 +438,7 @@ const handleSubmitComplaint = async (complaintData: { packageId: number; descrip
     );
   }
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     showLoadingToast();
     
     localStorage.removeItem("authToken");
@@ -492,12 +516,12 @@ const handleSubmitComplaint = async (complaintData: { packageId: number; descrip
         </div>
 
         {/* Complaint Modal */}
-          <ComplaintModal
-            isOpen={complaintModal.isOpen}
-            onClose={() => setComplaintModal({ isOpen: false, packageData: null })}
-            packageData={complaintModal.packageData}
-            onSubmit={handleSubmitComplaint}
-          />
+        <ComplaintModal
+          isOpen={complaintModal.isOpen}
+          onClose={() => setComplaintModal({ isOpen: false, packageData: null })}
+          packageData={complaintModal.packageData}
+          onSubmit={handleSubmitComplaint}
+        />
 
         {/* Refresh Button */}
         <div className="mb-6">

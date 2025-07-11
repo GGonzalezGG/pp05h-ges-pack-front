@@ -15,7 +15,7 @@ interface PackageData {
 interface ComplaintModalProps {
   isOpen: boolean;
   onClose: () => void;
-  packageData: PackageData;
+  packageData: PackageData | null;
   onSubmit: (complaintData: { packageId: number; description: string }) => Promise<void>;
 }
 
@@ -25,10 +25,10 @@ const ComplaintModal: React.FC<ComplaintModalProps> = ({
   packageData, 
   onSubmit 
 }) => {
-  const [description, setDescription] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [description, setDescription] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   // Limpiar formulario cuando se abre/cierra el modal
   useEffect(() => {
@@ -67,12 +67,17 @@ const ComplaintModal: React.FC<ComplaintModalProps> = ({
       return;
     }
 
+    if (!packageData?.paquete?.ID_pack) {
+      setError('Error: No se encontró información del paquete');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
       await onSubmit({
-        packageId: packageData?.paquete?.ID_pack,
+        packageId: packageData.paquete.ID_pack,
         description: description.trim()
       });
       
