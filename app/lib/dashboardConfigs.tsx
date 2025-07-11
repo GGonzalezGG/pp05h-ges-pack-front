@@ -2,28 +2,32 @@
 import React from 'react';
 import { Clock, CheckCircle, AlertTriangle, Package, FileText } from 'lucide-react';
 
-// Definir tipos para los datos
-interface Paquete {
+// Importar el tipo DashboardItem del componente Dashboard
+// Para evitar duplicación, usamos el mismo tipo que ya está definido
+interface DashboardItem {
   id: number;
-  nombreDestinatario: string;
-  apellidoDestinatario: string;
-  departamento: string;
+  idDestinatario?: number;
+  idRetirador?: number;
+  fechaEntrega?: string;
+  fechaLimite?: string;
+  fechaRetiro?: string;
   ubicacion?: string;
-  fechaEntrega: string | null;
-  fechaLimite: string | null;
-  fechaRetiro?: string | null;
+  nombreDestinatario?: string;
+  apellidoDestinatario?: string;
+  departamento?: string;
   nombreRetirador?: string;
   apellidoRetirador?: string;
-}
-
-interface Reclamo {
-  id: number;
-  descripcion?: string;
-  nombreResidente: string;
-  apellidoResidente: string;
-  departamento: string;
+  // Para reclamos
+  idUsuario?: number;
   idPack?: number;
+  nombreResidente?: string;
+  apellidoResidente?: string;
+  tipo?: string;
   estado?: string;
+  descripcion?: string;
+  fechaCreacion?: string;
+  ubicacionPaquete?: string;
+  fechaEntregaPaquete?: string;
 }
 
 // Función para formatear fecha
@@ -55,24 +59,24 @@ export const paquetesConfig = {
     {
       key: 'id',
       label: 'ID',
-      render: (item: Paquete) => `#${item.id}`
+      render: (item: DashboardItem) => `#${item.id}`
     },
     {
       key: 'destinatario',
       label: 'Destinatario',
-      render: (item: Paquete) => (
+      render: (item: DashboardItem) => (
         <div>
           <div className="font-medium">
-            {item.nombreDestinatario} {item.apellidoDestinatario}
+            {item.nombreDestinatario || 'N/A'} {item.apellidoDestinatario || ''}
           </div>
-          <div className="text-gray-500">Depto. {item.departamento}</div>
+          <div className="text-gray-500">Depto. {item.departamento || 'N/A'}</div>
         </div>
       )
     },
     {
       key: 'ubicacion',
       label: 'Ubicación',
-      render: (item: Paquete) => (
+      render: (item: DashboardItem) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
           {item.ubicacion || 'N/A'}
         </span>
@@ -81,12 +85,12 @@ export const paquetesConfig = {
     {
       key: 'fechaEntrega',
       label: 'Fecha Entrega',
-      render: (item: Paquete) => formatDate(item.fechaEntrega)
+      render: (item: DashboardItem) => formatDate(item.fechaEntrega)
     },
     {
       key: 'fechaLimite',
       label: 'Fecha Límite',
-      render: (item: Paquete) => (
+      render: (item: DashboardItem) => (
         <span className={`${isExpired(item.fechaLimite) ? 'text-red-600 font-medium' : ''}`}>
           {formatDate(item.fechaLimite)}
         </span>
@@ -95,14 +99,14 @@ export const paquetesConfig = {
     {
       key: 'retirador',
       label: 'Retirador',
-      render: (item: Paquete) => 
+      render: (item: DashboardItem) => 
         item.nombreRetirador 
-          ? `${item.nombreRetirador} ${item.apellidoRetirador}`
+          ? `${item.nombreRetirador} ${item.apellidoRetirador || ''}`
           : 'No retirado'
     }
   ],
   statusConfig: {
-    getStatus: (item: Paquete) => {
+    getStatus: (item: DashboardItem) => {
       if (item.fechaRetiro) return 'delivered';
       if (isExpired(item.fechaLimite)) return 'expired';
       return 'pending';
@@ -130,7 +134,7 @@ export const paquetesConfig = {
   }
 };
 
-// Configuración para Dashboard de Reclamos (ejemplo extensible)
+// Configuración para Dashboard de Reclamos
 export const reclamosConfig = {
   title: 'Dashboard de Reclamos',
   endpoint: '/api/reclamos',
@@ -139,13 +143,13 @@ export const reclamosConfig = {
     {
       key: 'id',
       label: 'ID',
-      render: (item: Reclamo) => `#${item.id}`
+      render: (item: DashboardItem) => `#${item.id}`
     },
     {
       key: 'descripcion',
       label: 'Descripción',
-      render: (item: Reclamo) => (
-        <div className="max-w-xs truncate" title={item.descripcion}>
+      render: (item: DashboardItem) => (
+        <div className="max-w-xs truncate" title={item.descripcion || 'Sin descripción'}>
           {item.descripcion || 'Sin descripción'}
         </div>
       )
@@ -153,19 +157,19 @@ export const reclamosConfig = {
     {
       key: 'residente',
       label: 'Residente',
-      render: (item: Reclamo) => (
+      render: (item: DashboardItem) => (
         <div>
           <div className="font-medium">
-            {item.nombreResidente} {item.apellidoResidente}
+            {item.nombreResidente || 'N/A'} {item.apellidoResidente || ''}
           </div>
-          <div className="text-gray-500">Depto. {item.departamento}</div>
+          <div className="text-gray-500">Depto. {item.departamento || 'N/A'}</div>
         </div>
       )
     },
     {
       key: 'paquete',
       label: 'Paquete',
-      render: (item: Reclamo) => 
+      render: (item: DashboardItem) => 
         item.idPack ? `Paquete #${item.idPack}` : 'Sin paquete asociado'
     },
     {
@@ -175,7 +179,7 @@ export const reclamosConfig = {
     }
   ],
   statusConfig: {
-    getStatus: (item: Reclamo) => {
+    getStatus: (item: DashboardItem) => {
       switch (item.estado?.toLowerCase()) {
         case 'completado': 
           return 'delivered';

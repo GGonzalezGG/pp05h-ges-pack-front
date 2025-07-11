@@ -4,7 +4,6 @@ import PackageDisplay, { PackageData } from './PackageDisplay';
 import StatusSelector from './StatusSelector';
 import { buildApiUrl } from '../config/config';
 
-// Tipos para los datos del dashboard
 interface DashboardItem {
   id: number;
   idDestinatario?: number;
